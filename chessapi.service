@@ -1,0 +1,14 @@
+[Unit]
+Description=Chess API FastAPI Service
+After=network.target
+
+[Service]
+User=matt
+WorkingDirectory=/home/matt/chessapi
+Environment="PATH=/home/matt/chessapi/bin"
+ExecStart=/home/matt/chessapi/bin/python -m uvicorn chessapi:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
