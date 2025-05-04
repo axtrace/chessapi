@@ -22,6 +22,30 @@ source /home/{user}/chessapi/bin/activate
 pip install fastapi uvicorn python-chess
 ```
 
+## API Key Setup
+
+1. Generate a secure API key:
+```bash
+openssl rand -base64 32
+```
+
+2. Create a `.env` file in the project root:
+```bash
+nano .env
+```
+
+3. Add the API key to the `.env` file:
+```
+API_KEY=your-generated-key-here
+```
+
+4. Set proper permissions:
+```bash
+chmod 600 .env
+```
+
+Note: Keep your API key secret and never commit the `.env` file to version control.
+
 ## Running the Application
 
 ### First Run
