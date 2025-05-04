@@ -19,7 +19,7 @@ python3 -m venv chessapi
 source /home/{user}/chessapi/bin/activate
 
 # Install dependencies
-pip install fastapi uvicorn python-chess
+pip install fastapi uvicorn python-chess pydantic-settings
 ```
 
 ## API Key Setup
@@ -46,26 +46,45 @@ chmod 600 .env
 
 Note: Keep your API key secret and never commit the `.env` file to version control.
 
-## Running the Application
+## SSL Certificate Setup
 
-### First Run
+1. Install certbot:
 ```bash
-python -m uvicorn chessapi:app --host 0.0.0.0 --port 8000
+sudo apt install certbot
 ```
+
+2. Stop the service to free port 80:
+```bash
+sudo systemctl stop chessapi
+```
+
+3. Obtain SSL certificate:
+```bash
+sudo certbot certonly --standalone -d alice-chess.ru --email your-email@example.com --agree-tos --non-interactive
+```
+
+4. Set proper permissions for certificates:
+```bash
+sudo chown -R {user}:{user} /etc/letsencrypt/
+sudo chmod -R 755 /etc/letsencrypt/
+```
+
+## Running the Application
 
 ### Setting up systemd for Automatic Startup
 
 1. Create a file `/etc/systemd/system/chessapi.service` with the following content:
 ```ini
 [Unit]
-Description=Chess API Service
+Description=Chess API FastAPI Service
 After=network.target
 
 [Service]
 User={user}
+Group={user}
 WorkingDirectory=/home/{user}/chessapi
 Environment="PATH=/home/{user}/chessapi/bin"
-ExecStart=/home/{user}/chessapi/bin/python -m uvicorn chessapi:app --host 0.0.0.0 --port 8000
+ExecStart=/home/{user}/chessapi/bin/python -m uvicorn chessapi:app --host 0.0.0.0 --port 8000 --ssl-keyfile /etc/letsencrypt/live/alice-chess.ru/privkey.pem --ssl-certfile /etc/letsencrypt/live/alice-chess.ru/fullchain.pem
 Restart=always
 
 [Install]
@@ -95,3 +114,16 @@ journalctl -u chessapi -f
 ```bash
 sudo systemctl restart chessapi
 ```
+
+## API Usage
+
+All API endpoints require authentication using an API key. Include the API key in the `X-API-Key` header:
+
+```bash
+curl -X POST "https://alice-chess.ru:8000/bestmove/" \
+     -H "X-API-Key: your-secret-api-key-here" \
+     -H "Content-Type: application/json" \
+     -d '{"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 10}'
+```
+
+Note: Replace `your-secret-api-key-here` with your actual API key.
