@@ -1,0 +1,45 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.7, pytest-8.3.5, pluggy-1.5.0
+rootdir: /Users/matvey/PycharmProjects/chessapi
+plugins: asyncio-0.26.0, anyio-4.6.2.post1
+asyncio: mode=Mode.STRICT, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 5 items
+
+tests/test_chessapi.py .F
+
+=================================== FAILURES ===================================
+________________________________ test_game_over ________________________________
+
+    @pytest.mark.asyncio
+    async def test_game_over():
+        """Тест на обработку окончания игры"""
+        # FEN для мата
+        mate_fen = "8/8/8/8/8/8/8/7k w - - 0 1"
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.post(
+                "/bestmove/",
+                json={"fen": mate_fen, "depth": 1},
+                headers={"X-API-Key": TEST_API_KEY}
+            )
+            assert response.status_code == 200
+            data = response.json()
+            print(data)
+            assert data["status"] == "game_over"
+>           assert "error" in data
+E           AssertionError: assert 'error' in {'reason': 'INSUFFICIENT_MATERIAL', 'status': 'game_over'}
+
+tests/test_chessapi.py:38: AssertionError
+----------------------------- Captured stdout call -----------------------------
+{'status': 'game_over', 'reason': 'INSUFFICIENT_MATERIAL'}
+=============================== warnings summary ===============================
+../../../../Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/_internal/_config.py:323
+  /Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/site-packages/pydantic/_internal/_config.py:323: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.11/migration/
+    warnings.warn(DEPRECATION_MESSAGE, DeprecationWarning)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_chessapi.py::test_game_over - AssertionError: assert 'error...
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! KeyboardInterrupt !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+/Library/Frameworks/Python.framework/Versions/3.12/lib/python3.12/selectors.py:566: KeyboardInterrupt
+(to show a full traceback on KeyboardInterrupt use --full-trace)
+=================== 1 failed, 1 passed, 1 warning in 19.28s ====================

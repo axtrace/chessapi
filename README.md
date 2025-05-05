@@ -117,13 +117,58 @@ sudo systemctl restart chessapi
 
 ## API Usage
 
-All API endpoints require authentication using an API key. Include the API key in the `X-API-Key` header:
+All API endpoints require authentication using an API key. Include the API key in the `X-API-Key` header.
 
+### Best Move Endpoint
+
+Request:
 ```bash
 curl -X POST "https://alice-chess.ru:8000/bestmove/" \
      -H "X-API-Key: your-secret-api-key-here" \
      -H "Content-Type: application/json" \
      -d '{"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 10}'
+```
+
+Possible responses:
+
+1. Successful move:
+```json
+{
+    "best move": "e2e4"
+}
+```
+
+2. Game over:
+```json
+{
+    "error": "Game is over",
+    "reason": "CHECKMATE",
+    "status": "game_over"
+}
+```
+
+3. No legal moves:
+```json
+{
+    "error": "No legal moves available",
+    "status": "no_moves"
+}
+```
+
+### Health Check Endpoint
+
+Request:
+```bash
+curl -X GET "https://alice-chess.ru:8000/healthcheck" \
+     -H "X-API-Key: your-secret-api-key-here"
+```
+
+Response:
+```json
+{
+    "status": "ok",
+    "engine": "Stockfish"
+}
 ```
 
 Note: Replace `your-secret-api-key-here` with your actual API key.
