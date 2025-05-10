@@ -134,7 +134,7 @@ Possible responses:
 1. Successful move:
 ```json
 {
-    "best move": "e2e4"
+    "best_move": "e2e4"
 }
 ```
 
