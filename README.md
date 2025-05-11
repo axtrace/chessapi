@@ -150,7 +150,8 @@ Possible responses:
 {
     "error": "Game is over",
     "reason": "CHECKMATE",
-    "status": "game_over"
+    "status": "game_over",
+    "used_time": 0.1
 }
 ```
 
