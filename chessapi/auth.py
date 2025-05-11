@@ -12,6 +12,6 @@ async def get_api_key(api_key_header: str = Security(api_key_header)):
         )
     if api_key_header != settings.API_KEY:
         raise HTTPException(
-            status_code=403, detail="Invalid API key"
+                status_code=403, detail="Invalid API key"
         )
     return api_key_header

@@ -7,6 +7,7 @@ from .auth import get_api_key
 import asyncio
 import platform
 import os
+from .auth import get_api_key 
 
 # Определяем путь к Stockfish в зависимости от ОС
 if platform.system() == "Darwin":  # macOS
@@ -24,6 +25,7 @@ engine = None
 class MoveRequest(BaseModel):
     fen: str
     depth: int = 10
+    time: float = 0.01  # Время на ход в секундах (по умолчанию 0.01, максимум 2.0)
 
     @field_validator('fen')
     @classmethod
@@ -103,7 +105,9 @@ async def best_move(req: MoveRequest, api_key: str = Depends(get_api_key)):
         }
     
     try:
-        result = await engine.play(board, chess.engine.Limit(depth=req.depth, time=0.01, nodes=100))
+        # Ограничиваем time максимумом 2.0 (дополнительная проверка)
+        time_for_move = min(max(req.time, 0.01), 2.0)
+        result = await engine.play(board, chess.engine.Limit(depth=req.depth, time=time_for_move, nodes=100))
         if result.move is None:
             return {
                 "status": "no_moves",
@@ -114,6 +118,7 @@ async def best_move(req: MoveRequest, api_key: str = Depends(get_api_key)):
         return {
             "status": "ok",
             "best_move": best_move,
+            "used_time": time_for_move,
             "error": None
         }
     except Exception as e:

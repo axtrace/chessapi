@@ -11,7 +11,7 @@ import os
 TEST_API_KEY = "test_key_123"
 
 engine = None
-use_mock_engine = os.getenv("USE_MOCK_ENGINE", "false").lower() == "true"
+use_mock_engine = True  # Принудительно используем mock-движок для тестов
 
 async def ensure_engine():
     global engine
@@ -65,7 +65,7 @@ async def test_valid_move(mock_engine):
 @pytest.mark.asyncio
 async def test_healthcheck(mock_engine):
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", timeout=0.1) as client:
-        response = await client.get("/healthcheck")
+        response = await client.get("/healthcheck", headers={"X-API-Key": TEST_API_KEY})
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
 
@@ -78,3 +78,59 @@ async def test_no_api_key():
             json={"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 1}
         )
         assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_valid_time_param(mock_engine):
+    """Тест: time=0.5 (валидно)"""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", timeout=0.5) as client:
+        response = await client.post(
+            "/bestmove/",
+            json={"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 1, "time": 0.5},
+            headers={"X-API-Key": TEST_API_KEY}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["used_time"] == 0.5
+
+@pytest.mark.asyncio
+async def test_valid_time_param_max(mock_engine):
+    """Тест: time=2.0 (валидно)"""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", timeout=2.5) as client:
+        response = await client.post(
+            "/bestmove/",
+            json={"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 1, "time": 2.0},
+            headers={"X-API-Key": TEST_API_KEY}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["used_time"] == 2.0
+
+@pytest.mark.asyncio
+async def test_invalid_time_param_too_high(mock_engine):
+    """Тест: time=2.5 (ошибка 422)"""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", timeout=1.0) as client:
+        response = await client.post(
+            "/bestmove/",
+            json={"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 1, "time": 2.5},
+            headers={"X-API-Key": TEST_API_KEY}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["used_time"] == 2.0
+
+@pytest.mark.asyncio
+async def test_invalid_time_param_negative(mock_engine):
+    """Тест: time=-1 (ошибка 422)"""
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test", timeout=1.0) as client:
+        response = await client.post(
+            "/bestmove/",
+            json={"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 1, "time": -1},
+            headers={"X-API-Key": TEST_API_KEY}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["used_time"] == 0.01

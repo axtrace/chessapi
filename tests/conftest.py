@@ -43,30 +43,12 @@ def mock_stockfish_path(monkeypatch):
     monkeypatch.setenv("STOCKFISH_PATH", STOCKFISH_PATH)
 
 @pytest_asyncio.fixture(scope="function")
-async def setup_engine():
-    """Инициализируем движок для каждого теста"""
-    try:
-        transport, engine = await chess.engine.popen_uci(STOCKFISH_PATH)
-        await engine.configure({
-            "Threads": 1,
-            "Hash": 1,
-            "Skill Level": 0,
-            "Move Overhead": 0
-        })
-        yield engine
-    finally:
-        if engine:
-            await engine.quit()
-
-@pytest_asyncio.fixture
-async def mock_engine():
+async def mock_engine(monkeypatch):
+    """Инициализируем mock-движок для каждого теста и подменяем глобальный engine"""
     engine = AsyncMock()
     engine.ping = AsyncMock()
-    
-    # Настройка моков для разных тестов
-    if "test_game_over" in os.environ.get("PYTEST_CURRENT_TEST", ""):
-        engine.play = AsyncMock(return_value=AsyncMock(move=None))  # Для game_over
-    else:
-        engine.play = AsyncMock(return_value=AsyncMock(move=chess.Move.from_uci("e2e4")))
-    
+    engine.play = AsyncMock(return_value=AsyncMock(move=chess.Move.from_uci("e2e4")))
+    # Подменяем глобальный engine в chessapi.chessapi
+    import chessapi.chessapi
+    monkeypatch.setattr(chessapi.chessapi, "engine", engine)
     yield engine

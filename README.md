@@ -126,8 +126,15 @@ Request:
 curl -X POST "https://alice-chess.ru:8000/bestmove/" \
      -H "X-API-Key: your-secret-api-key-here" \
      -H "Content-Type: application/json" \
-     -d '{"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 10}'
+     -d '{"fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "depth": 10, "time": 0.5}'
 ```
+
+**Параметры запроса:**
+- `fen` (str, обязательный): FEN-строка позиции
+- `depth` (int, опционально, по умолчанию 10): Глубина поиска
+- `time` (float, опционально, по умолчанию 0.01, максимум 2.0): Время на ход в секундах
+
+**Внимание:** Если указано время на ход больше 2 сек., будет взято ровно 2 сек. Если меньше 0.01 сек., будет взято 0.01
 
 Possible responses:
 
@@ -172,3 +179,4 @@ Response:
 ```
 
 Note: Replace `your-secret-api-key-here` with your actual API key.
+ 
